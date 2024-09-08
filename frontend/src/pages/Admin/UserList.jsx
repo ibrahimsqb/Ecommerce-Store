@@ -8,6 +8,7 @@ import Message from '../../components/Message'
 import {useGetUsersQuery,
   useDeleteUserMutation,
   useUpdateUserMutation} from '../../redux/api/usersApiSlice'
+import AdminMenu from './AdminMenu'
 
 const UserList = () => {
     const {data: users, refetch, isLoading, error} = useGetUsersQuery();
@@ -57,7 +58,7 @@ const UserList = () => {
     {isLoading ? (<Loader />) : error ? (<Message variant='danger'>{error?.data.message || 
     error.message} </Message>) : (
       <div className='flex flex-col md:flex-row'>
-        {/* Admin Menu */}
+        <AdminMenu />
         <table className="w-full md:w-4/5 mx-auto">
           <thead>
             <tr>
