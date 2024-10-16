@@ -24,10 +24,9 @@ const ProductList = () => {
     const [imageUrl, setImageUrl] = useState(null)
     const navigate = useNavigate()
 
-    const [uploadProductImage] = useUploadProductImageMutation()
-    const [createProduct] = useCreateProductMutation()
+    const [uploadProductImage] = useUploadProductImageMutation();
+    const [createProduct] = useCreateProductMutation();
     const {data: categories} = useFetchCategoriesQuery();
-
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -156,7 +155,7 @@ const ProductList = () => {
                         type="text" 
                         className='p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white' 
                         value={stock} 
-                        onChange={e => setStock(e.target.value)}  
+                        onChange={(e) => setStock(e.target.value)}  
                         />
                     </div>
 
@@ -165,7 +164,8 @@ const ProductList = () => {
                         <select 
                         placeholder="Choose Category" 
                         className='p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white'
-                        onChange={e => setCategory(e.target.value)}
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
                         >
                             {categories?.map((c) => (
                                 <option key={c._id} value={c._id}>

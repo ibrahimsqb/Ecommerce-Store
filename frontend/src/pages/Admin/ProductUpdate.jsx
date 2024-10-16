@@ -20,45 +20,109 @@ const ProductUpdate = () => {
     const [image, setImage] = useState(productData?.image || "")
     const [name, setName] = useState(productData?.name || "")
     const [description, setDescription] = useState(productData?.description || "")
-    //const [price, setPrice] = useState(productData?.price || "")
-    const [category, setCategory] = useState(productData?.price || "")
+    const [price, setPrice] = useState(productData?.price || "")
+    const [category, setCategory] = useState(productData?.category || "")
     const [quantity, setQuantity] = useState(productData?.quantity || "")
     const [brand, setBrand] = useState(productData?.brand || "")
     const [stock, setStock] = useState(productData?.countInStock)
 
     const navigate = useNavigate()
 
-    const {data: categories = []} = useFetchCategoriesQuery()
-    const [uploadProductImage] = useUploadProductImageMutation()
-    const [updateProduct] = useUpdateProductMutation()
-    const [deleteProduct] = useDeleteProductMutation()
+    const { data: categories = [] } = useFetchCategoriesQuery();
+    const [uploadProductImage] = useUploadProductImageMutation();
+    const [updateProduct] = useUpdateProductMutation();
+    const [deleteProduct] = useDeleteProductMutation();
+
 
     useEffect(() => {
         if (productData && productData._id) {
             setName(productData.name)
             setDescription(productData.description)
-            //setPrice(productData.price)
-            setCategory(productData.categories?._id)
+            setPrice(productData.price)
+            setCategory(productData.category)
             setQuantity(productData.quantity)
             setBrand(productData.brand)
             setImage(productData.image)
+            setStock(productData.countInStock || 0)
         }
     }, [productData]);
+
+    const uploadFileHandler = async (e) => {
+        const formData = new FormData();
+        formData.append('image', e.target.files[0])
+        try {
+            const res = await uploadProductImage(formData).unwrap()
+            toast.success('Item added successfuly')
+            setImage(res.image)
+        } catch (error) {
+            toast.error("Item added successfuly")
+        }
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const formData = new FormData();
+            formData.append("image", image);
+            formData.append("name", name);
+            formData.append("description", description);
+            formData.append("price", price);
+            console.log(category);
+            formData.append("category", category);
+            formData.append("quantity", quantity);
+            formData.append("brand", brand);
+            formData.append("countInStock", stock);
+    
+            await updateProduct({ productId: params._id, formData }).unwrap();
+    
+            // Success notification
+            toast.success("Product successfully updated.", {
+                position: "top-right",
+                autoClose: 2000,
+            });
+            navigate("/admin/allproductslist");
+    
+        } catch (error) {
+            // Error notification
+            toast.error("Product update failed. Try again.", {
+                position: "top-right",
+                autoClose: 2000,
+            });
+        }
+    };
+    
+
+    const handleDelete = async () => {
+        try {
+            
+            let answer = window.confirm('Are you sure you want to delete this product?')
+
+            if(!answer) return;
+
+            const {data} = await deleteProduct(params._id)
+            toast.success(`${data.name} is deleted`)
+            navigate('/admin/allproductslist')
+
+        } catch (error) {
+            console.error(error)
+            toast.error("delete failed. Try again.")
+        }
+    }
 
   return <div className='container xl:mx-[9rem] sm:mx-[0]'>
   <div className='flex flex-col md:flex-row'>
       <AdminMenu />
       <div className="md:w-3/4 p-3">
-      <div className='h-12'>Create Product</div>
-      {/*imageUrl && (
+      <div className='h-12'>Update/Delete Product</div>
+      {image && (
           <div className='text-center'>
               <img 
-              src={imageUrl} 
+              src={image} 
               alt='product' 
-              className='block mx-auto max-h-[200px]'
+              className='block mx-auto w-full h-[40%]'
               />
           </div>
-      )*/}
+      )}
 
       <div className="mb-3">
           <label className='border text-white px-4 block w-full text-center rounded-lg cursor-pointer font-bold py-11' >
@@ -68,8 +132,8 @@ const ProductUpdate = () => {
               type="file" 
               name='image' 
               accept='image/*' 
-              //onChange={uploadFileHandler} 
-              className={!image ? 'hidden' : 'text-white'}
+              onChange={uploadFileHandler} 
+              className="text-white"
               />
           </label>
       </div>
@@ -86,12 +150,12 @@ const ProductUpdate = () => {
               </div>
               <div className="two ml-10">
                   <label htmlFor='name block'>Price</label> <br />
-                 {/* <input 
+                 { <input 
                   type="number" 
                   className='p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white' 
                   value={price} 
                   onChange={(e) => setPrice(e.target.value)}
-                  />*/ }
+                  /> }
               </div>
           </div>
           <div className='flex flex-wrap'>
@@ -130,7 +194,7 @@ const ProductUpdate = () => {
                   type="text" 
                   className='p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white' 
                   value={stock} 
-                  onChange={e => setStock(e.target.value)}  
+                  onChange={(e) => setStock(e.target.value)}  
                   />
               </div>
 
@@ -138,8 +202,9 @@ const ProductUpdate = () => {
                   <label htmlFor="">Category</label> <br />
                   <select 
                   placeholder="Choose Category" 
-                  className='p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white'
-                  onChange={e => setCategory(e.target.value)}
+                  className='p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white mr-[5rem]'
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
                   >
                       {categories?.map((c) => (
                           <option key={c._id} value={c._id}>
@@ -149,12 +214,19 @@ const ProductUpdate = () => {
                   </select>
               </div>
           </div>
-          <button 
-          //onClick={handleSubmit} 
-          className='py-4 px-10 mt-5 rounded-lg text-lg font-bold bg-pink-600'>
-          Submit
-          </button>
+                  <div>
+                      <button
+                          onClick={handleSubmit} 
+                          className='py-4 px-10 mt-5 rounded-lg text-lg font-bold bg-green-600 mr-6'>
+                          Update
+                      </button>
 
+                      <button
+                          onClick={handleDelete} 
+                          className='py-4 px-10 mt-5 rounded-lg text-lg font-bold bg-pink-600'>
+                          Delete
+                      </button>
+                  </div>
       </div>
       </div>
   </div>
